@@ -1,0 +1,47 @@
+name: Xolby's Tpa
+main: com.xolby.tpa.XolbyTpaPlugin
+version: 1.0.0
+api-version: 1.18
+author: Xolby
+description: Simple /tpa system with accept/deny/cancel, JSON config and cooldowns.
+commands:
+  tpa:
+    description: Request to teleport to a player
+    usage: /tpa <player>
+    permission: xolby.tpa.use
+  tpaccept:
+    description: Accept the last teleport request
+    usage: /tpaccept
+    permission: xolby.tpa.accept
+  tpacancel:
+    description: Cancel your outgoing teleport request
+    usage: /tpacancel
+    permission: xolby.tpa.cancel
+  tpadeny:
+    description: Deny the last teleport request
+    usage: /tpadeny
+    permission: xolby.tpa.deny
+  tpahere:
+    description: Request a player to teleport to you
+    usage: /tpahere <player>
+    permission: xolby.tpa.here
+permissions:
+  xolby.tpa.use:
+    description: Use /tpa
+    default: true
+  xolby.tpa.accept:
+    description: Use /tpaccept
+    default: true
+  xolby.tpa.cancel:
+    description: Use /tpacancel
+    default: true
+  xolby.tpa.deny:
+    description: Use /tpadeny
+    default: true
+  xolby.tpa.bypasscooldown:
+    description: Bypass /tpa cooldown
+    default: op
+
+  xolby.tpa.here:
+    description: Use /tpahere
+    default: true
