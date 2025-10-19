@@ -8,6 +8,8 @@
     "tpa_usage": "Usage: /tpa <player>",
     "request_sent": "TPA sent to &e%target%&r.",
     "request_received": "&e%sender%&r wants to teleport to you. Use &a/tpaccept&r or &c/tpadeny&r.",
+    "request_sent_here": "TPA-here sent to &e%target%&r.",
+    "request_received_here": "&e%sender%&r asks you to teleport to them. Use &a/tpaccept&r or &c/tpadeny&r.",
     "already_requested": "You already have a pending request with &e%target%&r.",
     "no_request": "You have no pending request.",
     "accepted_sender": "Your request was &aaccepted&r by &e%target%&r. %teleport_msg%",
@@ -20,11 +22,9 @@
     "request_expired_target": "The request from &e%sender%&r &cexpired&r.",
     "teleporting_in": "Teleporting in &e%seconds%s&r...",
     "teleport_complete": "&aTeleported!",
+    "moved_cancel": "&cTeleport cancelled because you moved.",
     "on_cooldown": "You must wait &e%seconds%s&r before using /tpa again.",
     "player_not_found": "&cPlayer not found.",
-    "self_request": "&cYou cannot send a request to yourself.",
-    "request_sent_here": "TPA-here sent to &e%target%&r.",
-    "request_received_here": "&e%sender%&r asks you to teleport to them. Use &a/tpaccept&r or &c/tpadeny&r.",
-    "moved_cancel": "&cTeleport cancelled because you moved."
+    "self_request": "&cYou cannot send a request to yourself."
   }
 }

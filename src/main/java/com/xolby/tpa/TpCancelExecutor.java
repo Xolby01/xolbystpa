@@ -12,10 +12,7 @@ public class TpCancelExecutor implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player p)) { sender.sendMessage("Players only."); return true; }
-        if (!p.hasPermission("xolby.tpa.cancel")) {
-            p.sendMessage(pl.mm("prefix") + "You lack permission.");
-            return true;
-        }
+        if (!p.hasPermission("xolby.tpa.cancel")) { p.sendMessage(pl.mm("prefix") + "You lack permission."); return true; }
         pl.cancel(p);
         return true;
     }

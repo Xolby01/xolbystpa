@@ -13,7 +13,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,12 +34,11 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
 
         register("tpa", new TpaExecutor(this));
+        register("tpahere", new TpaHereExecutor(this));
         register("tpaccept", new TpAcceptExecutor(this));
         register("tpacancel", new TpCancelExecutor(this));
         register("tpadeny", new TpDenyExecutor(this));
-        register("tpahere", new TpaHereExecutor(this));
 
-        // Clean up expired requests every 5 seconds
         new BukkitRunnable() {
             @Override public void run() {
                 long now = System.currentTimeMillis();
@@ -52,7 +50,7 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
             }
         }.runTaskTimer(this, 20L*5, 20L*5);
 
-        getLogger().info("Xolby's Tpa enabled.");
+        getLogger().info("Xolbys Tpa enabled.");
     }
 
     @Override
@@ -90,21 +88,13 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
 
     public ConfigManager getCfg() { return config; }
 
-    public String mm(String key) {
-        return color(config.getMessage(key));
-    }
-    public String color(String s) {
-        return ChatColor.translateAlternateColorCodes('&', s == null ? "" : s);
-    }
+    public String mm(String key) { return color(config.getMessage(key)); }
+    public String color(String s) { return org.bukkit.ChatColor.translateAlternateColorCodes('&', s == null ? "" : s); }
     public void msg(Player p, String key) { p.sendMessage(mm("prefix") + mm(key)); }
     public void msg(Player p, String key, Map<String,String> vars) {
         String m = config.getMessage(key);
-        if (m == null || m.isEmpty()) {
-            m = "";
-        }
-        for (Map.Entry<String,String> e : vars.entrySet()) {
-            m = m.replace("%"+e.getKey()+"%", e.getValue());
-        }
+        if (m == null) m = "";
+        for (Map.Entry<String,String> e : vars.entrySet()) m = m.replace("%"+e.getKey()+"%", e.getValue());
         p.sendMessage(color(config.getMessage("prefix") + m));
     }
 
@@ -139,20 +129,10 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
 
         if (dir == PendingRequest.Direction.SENDER_TO_TARGET) {
             msg(sender, "request_sent", vars);
-            // Fallback to generic if here-specific message not present will be handled by getMessage
-            if (getCfg().getMessage("request_received") != null && !getCfg().getMessage("request_received").isEmpty())
-                msg(target, "request_received", vars2);
-            else
-                msg(target, "request_received_here", vars2);
-        } else { // TARGET_TO_SENDER (/tpahere)
-            if (getCfg().getMessage("request_sent_here") != null && !getCfg().getMessage("request_sent_here").isEmpty())
-                msg(sender, "request_sent_here", vars);
-            else
-                msg(sender, "request_sent", vars);
-            if (getCfg().getMessage("request_received_here") != null && !getCfg().getMessage("request_received_here").isEmpty())
-                msg(target, "request_received_here", vars2);
-            else
-                msg(target, "request_received", vars2);
+            msg(target, "request_received", vars2);
+        } else {
+            msg(sender, "request_sent_here", vars);
+            msg(target, "request_received_here", vars2);
         }
     }
 
@@ -163,32 +143,22 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
         if (prS != null) pendingByTarget.remove(prS.getTarget());
     }
 
-    public PendingRequest getIncoming(Player target) {
-        return pendingByTarget.get(target.getUniqueId());
-    }
-
-    public PendingRequest getOutgoing(Player sender) {
-        return pendingBySender.get(sender.getUniqueId());
-    }
+    public PendingRequest getIncoming(Player target) { return pendingByTarget.get(target.getUniqueId()); }
+    public PendingRequest getOutgoing(Player sender) { return pendingBySender.get(sender.getUniqueId()); }
 
     public void accept(Player target) {
         PendingRequest pr = getIncoming(target);
-        if (pr == null) {
-            msg(target, "no_request");
-            return;
-        }
+        if (pr == null) { msg(target, "no_request"); return; }
         Player sender = Bukkit.getPlayer(pr.getSender());
         Player tgt = Bukkit.getPlayer(pr.getTarget());
         if (sender == null || !sender.isOnline() || tgt == null || !tgt.isOnline()) {
             pendingByTarget.remove(target.getUniqueId());
             if (pr != null) pendingBySender.remove(pr.getSender());
-            msg(target, "no_request");
-            return;
+            msg(target, "no_request"); return;
         }
 
-        // Who will be teleported?
         Player teleported;
-        Location destination;
+        org.bukkit.Location destination;
         if (pr.getDirection() == PendingRequest.Direction.SENDER_TO_TARGET) {
             teleported = sender;
             destination = tgt.getLocation();
@@ -206,25 +176,20 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
         String tMsg = delay > 0 ? mm("teleporting_in").replace("%seconds%", String.valueOf(delay)) : mm("teleport_complete");
         vSender.put("teleport_msg", tMsg);
 
-        // Notify
         msg(sender, "accepted_sender", vSender);
         msg(tgt, "accepted_target", vTarget);
 
-        // If there's a delay, also tell the player who will actually move
-        if (delay > 0) {
+        if (delay > 0 && teleported.isOnline()) {
             Map<String,String> tmp = new HashMap<>();
             tmp.put("seconds", String.valueOf(delay));
             msg(teleported, "teleporting_in", tmp);
         }
 
-        // schedule teleport
         if (delay <= 0) {
             doTeleport(teleported, destination);
         } else {
-            if (config.isCancelOnMove()) {
-                teleportStartLoc.put(teleported.getUniqueId(), teleported.getLocation().clone());
-            }
-            BukkitTask task = new BukkitRunnable() {
+            if (config.isCancelOnMove()) teleportStartLoc.put(teleported.getUniqueId(), teleported.getLocation().clone());
+            BukkitTask task = new org.bukkit.scheduler.BukkitRunnable() {
                 @Override public void run() {
                     doTeleport(teleported, destination);
                     teleportTasks.remove(teleported.getUniqueId());
@@ -234,22 +199,18 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
             teleportTasks.put(teleported.getUniqueId(), task);
         }
 
-        // remove request
         pendingByTarget.remove(tgt.getUniqueId());
         pendingBySender.remove(pr.getSender());
     }
 
-    private void doTeleport(Player p, Location to) {
+    private void doTeleport(Player p, org.bukkit.Location to) {
         p.teleport(to);
         msg(p, "teleport_complete");
     }
 
     public void deny(Player target) {
         PendingRequest pr = getIncoming(target);
-        if (pr == null) {
-            msg(target, "no_request");
-            return;
-        }
+        if (pr == null) { msg(target, "no_request"); return; }
         Player sender = Bukkit.getPlayer(pr.getSender());
         if (sender != null && sender.isOnline()) {
             Map<String,String> v = new HashMap<>();
@@ -259,17 +220,13 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
         Map<String,String> v2 = new HashMap<>();
         v2.put("sender", sender != null ? sender.getName() : "Unknown");
         msg(target, "denied_target", v2);
-
         pendingByTarget.remove(target.getUniqueId());
         pendingBySender.remove(pr.getSender());
     }
 
     public void cancel(Player sender) {
         PendingRequest pr = getOutgoing(sender);
-        if (pr == null) {
-            msg(sender, "no_request");
-            return;
-        }
+        if (pr == null) { msg(sender, "no_request"); return; }
         Player target = Bukkit.getPlayer(pr.getTarget());
         if (target != null && target.isOnline()) {
             Map<String,String> v = new HashMap<>();
@@ -279,7 +236,6 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
         Map<String,String> v2 = new HashMap<>();
         v2.put("target", target != null ? target.getName() : "Unknown");
         msg(sender, "request_cancelled", v2);
-
         pendingBySender.remove(sender.getUniqueId());
         pendingByTarget.remove(pr.getTarget());
     }
@@ -307,7 +263,7 @@ public class XolbyTpaPlugin extends JavaPlugin implements Listener {
         Player p = e.getPlayer();
         BukkitTask task = teleportTasks.get(p.getUniqueId());
         if (task == null) return;
-        Location start = teleportStartLoc.get(p.getUniqueId());
+        org.bukkit.Location start = teleportStartLoc.get(p.getUniqueId());
         if (start == null) return;
         if (e.getTo() == null) return;
         if (e.getTo().getWorld() != start.getWorld()) {

@@ -15,29 +15,14 @@ public class TpaHereExecutor implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player p)) {
-            sender.sendMessage("Players only.");
-            return true;
-        }
-        if (!p.hasPermission("xolby.tpa.here")) {
-            p.sendMessage(pl.mm("prefix") + "You lack permission.");
-            return true;
-        }
-        if (args.length != 1) {
-            p.sendMessage(pl.mm("prefix") + "Usage: /tpahere <player>");
-            return true;
-        }
+        if (!(sender instanceof Player p)) { sender.sendMessage("Players only."); return true; }
+        if (!p.hasPermission("xolby.tpa.here")) { p.sendMessage(pl.mm("prefix") + "You lack permission."); return true; }
+        if (args.length != 1) { p.sendMessage(pl.mm("prefix") + "Usage: /tpahere <player>"); return true; }
         if (!pl.canUseTpa(p)) return true;
 
         Player target = Bukkit.getPlayerExact(args[0]);
-        if (target == null || !target.isOnline()) {
-            p.sendMessage(pl.mm("prefix") + pl.mm("player_not_found"));
-            return true;
-        }
-        if (target.getUniqueId().equals(p.getUniqueId())) {
-            p.sendMessage(pl.mm("prefix") + pl.mm("self_request"));
-            return true;
-        }
+        if (target == null || !target.isOnline()) { p.sendMessage(pl.mm("prefix") + pl.mm("player_not_found")); return true; }
+        if (target.getUniqueId().equals(p.getUniqueId())) { p.sendMessage(pl.mm("prefix") + pl.mm("self_request")); return true; }
         var existing = pl.getOutgoing(p);
         if (existing != null && existing.getTarget().equals(target.getUniqueId())) {
             Map<String,String> v = new HashMap<>();

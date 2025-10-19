@@ -4,8 +4,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.xolby</groupId>
   <artifactId>xolbys-tpa</artifactId>
-  <version>1.0.0</version>
-  <name>Xolby's Tpa</name>
+  <version>1.1.1</version>
+  <name>Xolbys Tpa</name>
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
